@@ -1,31 +1,25 @@
-# --- ETAPA 1: Compilador (Builder) ---
-# Usamos la imagen oficial de V2Fly para obtener los binarios
-FROM v2fly/v2fly-core:v5.1.0 AS builder
+# 1. Usar una versión específica en lugar de 'latest'
+# Esto asegura que tus compilaciones sean predecibles y no se rompan con actualizaciones inesperadas.
+# Revisa en Docker Hub cuál es la última versión estable de teddysun/v2ray.
+FROM teddysun/v2ray:5.15.1
 
+# 2. Crear un usuario sin privilegios para ejecutar la aplicación
+# Ejecutar como 'root' en un contenedor es un riesgo de seguridad.
+RUN adduser -D -h /home/v2rayuser v2rayuser
 
-# --- ETAPA 2: Final ---
-# Usamos una de las imágenes base más pequeñas que existen: Alpine
-FROM alpine:3.19
-
-# Instalar certificados raíz, necesarios para conexiones seguras (buena práctica)
-RUN apk add --no-cache ca-certificates
-
-# Crear el directorio para la configuración y un usuario sin privilegios
-RUN mkdir -p /etc/v2ray && \
-    adduser -D -h /home/v2rayuser v2rayuser
-
-# Copiar SOLO los binarios necesarios desde la etapa del 'builder'
-COPY --from=builder /usr/bin/v2ray/v2ray /usr/bin/v2ray
-COPY --from=builder /usr/bin/v2ray/v2ctl /usr/bin/v2ctl
-
-# Copiar el archivo de configuración y asignar permisos
+# 3. Copiar la configuración y establecer el propietario correcto
+# La bandera --chown establece directamente el usuario y grupo del archivo.
 COPY --chown=v2rayuser:v2rayuser config.json /etc/v2ray/config.json
 
-# Cambiar al usuario sin privilegios
+# 4. Cambiar al usuario sin privilegios
+# A partir de este punto, todos los comandos se ejecutan como 'v2rayuser'.
 USER v2rayuser
 
-# Exponer el puerto
+# 5. Exponer el puerto (es una buena práctica de documentación)
 EXPOSE 8080
 
-# Comando de ejecución
-CMD ["/usr/bin/v2ray", "run", "-config", "/etc/v2ray/config.json"]
+# 6. Definir el comando para ejecutar el servidor
+CMD ["v2ray", "run", "-config", "/etc/v2ray/config.json"]
+
+# join telegram https://t.me/ragnarservers  for new updates 
+# my telegram username is @Not_Ragnar

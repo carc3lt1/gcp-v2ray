@@ -1,25 +1,25 @@
-# 1. Usar una versión específica en lugar de 'latest'
-# Esto asegura que tus compilaciones sean predecibles y no se rompan con actualizaciones inesperadas.
-# Revisa en Docker Hub cuál es la última versión estable de teddysun/v2ray.
-FROM teddysun/v2ray:5.15.1
+# 1. Usar Alpine Linux estable como base
+# Alpine es ultraligero y nos permite instalar múltiples paquetes a medida.
+FROM alpine:latest
 
-# 2. Crear un usuario sin privilegios para ejecutar la aplicación
-# Ejecutar como 'root' en un contenedor es un riesgo de seguridad.
-RUN adduser -D -h /home/v2rayuser v2rayuser
+# 2. Instalar el Proxy Inverso (Caddy) y el Motor VLESS (Xray)
+# Xray es un fork optimizado de V2Ray, 100% compatible con tu config.json actual.
+RUN apk update && \
+    apk add --no-cache xray caddy
 
-# 3. Copiar la configuración y establecer el propietario correcto
-# La bandera --chown establece directamente el usuario y grupo del archivo.
-COPY --chown=v2rayuser:v2rayuser config.json /etc/v2ray/config.json
+# 3. Crear directorios para las configuraciones
+RUN mkdir -p /etc/xray /etc/caddy
 
-# 4. Cambiar al usuario sin privilegios
-# A partir de este punto, todos los comandos se ejecutan como 'v2rayuser'.
-USER v2rayuser
+# 4. Copiar los archivos de configuración desde tu repositorio
+# Cloud Run gestiona su propio aislamiento de seguridad (gVisor sandbox), 
+# por lo que podemos usar el usuario por defecto del contenedor de forma segura.
+COPY config.json /etc/xray/config.json
+COPY Caddyfile /etc/caddy/Caddyfile
 
-# 5. Exponer el puerto (es una buena práctica de documentación)
+# 5. Exponer el puerto 8080 (Requisito estricto de Google Cloud Run)
 EXPOSE 8080
 
-# 6. Definir el comando para ejecutar el servidor
-CMD ["v2ray", "run", "-config", "/etc/v2ray/config.json"]
-
-# join telegram https://t.me/ragnarservers  for new updates 
-# my telegram username is @Not_Ragnar
+# 6. Definir el comando para ejecutar ambos servicios
+# Inicia Caddy en segundo plano como escudo frontal y Xray en primer plano.
+# Si el DPI de Claro escanea el puerto 8080, Caddy responderá con el HTTP 302.
+CMD caddy start --config /etc/caddy/Caddyfile && xray -c /etc/xray/config.json

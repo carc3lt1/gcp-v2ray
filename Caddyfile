@@ -1,14 +1,10 @@
 :8080 {
-    # 1. Regla de túnel: Si piden la ruta exacta y es WebSocket, pasa a Xray
-    @ws {
-        path /CARC3LT
-        header Connection *Upgrade*
-        header Upgrade websocket
+    # Enrutar directamente a Xray cualquier petición que use la ruta secreta del túnel
+    handle /CARC3LT {
+        reverse_proxy 127.0.0.1:10000
     }
-    reverse_proxy @ws 127.0.0.1:10000
 
-    # 2. Camuflaje Activo (Active Probing Defense)
-    # Todo tráfico distinto a tu app será redirigido a Claro.
+    # Actice Probing Defense: Cualquier otro intento de acceso fuera de la ruta secreta va a Claro
     handle {
         redir https://paquetes.miclaro.com.gt 302
     }

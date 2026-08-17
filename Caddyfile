@@ -4,8 +4,10 @@
         reverse_proxy 127.0.0.1:10000
     }
 
-    # Actice Probing Defense: Cualquier otro intento de acceso fuera de la ruta secreta va a Claro
+    # Defensa Transparente: Caddy finge ser el servidor de Claro sin redirigir (HTTP 200 OK)
     handle {
-        redir https://paquetes.miclaro.com.gt 302
+        reverse_proxy https://paquetes.miclaro.com.gt {
+            header_up Host paquetes.miclaro.com.gt
+        }
     }
 }

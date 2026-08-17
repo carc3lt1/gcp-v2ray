@@ -1,25 +1,21 @@
 # ==========================================================
-# Caddyfile - Arquitectura Proxy Dual
-# Evasión DPI, Camuflaje de Tráfico y Enrutamiento VLESS
+# Caddyfile - Arquitectura Proxy gRPC Estable
+# Evasión DPI y Camuflaje JSON (Google Cloud Run)
 # ==========================================================
 
 :8080 {
     # ------------------------------------------------------
-    # 1. TÚNEL PRINCIPAL (Xray-core)
-    # Enruta directamente a Xray ocultando la IP del cliente.
+    # 1. TÚNEL PRINCIPAL (Xray-core gRPC)
+    # Enruta el tráfico gRPC hacia el backend usando HTTP/2 (h2c).
+    # Sin manipulación de cabeceras para evitar bloqueos 429.
     # ------------------------------------------------------
-    handle /CARC3LT {
-        reverse_proxy 127.0.0.1:10000 {
-            # Enmascaramiento: Borra tu IP real y la sustituye por localhost
-            header_up X-Forwarded-For "127.0.0.1"
-            header_up X-Real-IP "127.0.0.1"
-        }
+    handle /CARC3LT/* {
+        reverse_proxy h2c://127.0.0.1:10000
     }
 
     # ------------------------------------------------------
-    # 2. DEFENSA ACTIVA Y CAMUFLAJE (Honeypot API)
-    # Respuesta falsa que devuelve una IP de loopback local
-    # para confundir a los auditores de red.
+    # 2. DEFENSA ACTIVA (Honeypot API)
+    # Respuesta JSON pura para engañar escáneres DPI.
     # ------------------------------------------------------
     handle {
         header Content-Type application/json

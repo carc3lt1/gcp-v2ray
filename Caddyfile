@@ -4,10 +4,9 @@
         reverse_proxy 127.0.0.1:10000
     }
 
-    # Defensa Transparente: Caddy finge ser el servidor de Claro sin redirigir (HTTP 200 OK)
+    # Defensa Estática (Agujero Negro): Responde nativamente sin consultar a Claro
+    # El escáner DPI recibe un código 200 OK y asume que es un nodo válido.
     handle {
-        reverse_proxy https://paquetes.miclaro.com.gt {
-            header_up Host paquetes.miclaro.com.gt
-        }
+        respond "OK" 200
     }
 }

@@ -1,22 +1,17 @@
 # ==========================================================
-# Caddyfile - Arquitectura Proxy gRPC Estable
+# Caddyfile - Arquitectura Proxy WebSocket (Revertida)
 # Evasión DPI y Camuflaje JSON (Google Cloud Run)
 # ==========================================================
 
 :8080 {
-    # ------------------------------------------------------
-    # 1. TÚNEL PRINCIPAL (Xray-core gRPC)
-    # Enruta el tráfico gRPC hacia el backend usando HTTP/2 (h2c).
-    # Sin manipulación de cabeceras para evitar bloqueos 429.
-    # ------------------------------------------------------
-    handle /CARC3LT/* {
-        reverse_proxy h2c://127.0.0.1:10000
+    # 1. TÚNEL PRINCIPAL (Xray-core WebSocket)
+    # Enruta el tráfico WS limpio hacia el backend local.
+    handle /CARC3LT {
+        reverse_proxy 127.0.0.1:10000
     }
 
-    # ------------------------------------------------------
     # 2. DEFENSA ACTIVA (Honeypot API)
-    # Respuesta JSON pura para engañar escáneres DPI.
-    # ------------------------------------------------------
+    # Respuesta JSON para despistar escáneres DPI
     handle {
         header Content-Type application/json
         header Access-Control-Allow-Origin *

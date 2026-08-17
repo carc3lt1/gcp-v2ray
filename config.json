@@ -23,9 +23,9 @@
         "decryption": "none"
       },
       "streamSettings": {
-        "network": "grpc",
-        "grpcSettings": {
-          "serviceName": "CARC3LT"
+        "network": "ws",
+        "wsSettings": {
+          "path": "/CARC3LT"
         }
       }
     }

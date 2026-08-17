@@ -1,12 +1,38 @@
+# ==========================================================
+# Caddyfile - Arquitectura Proxy Dual
+# Evasión DPI, Camuflaje de Tráfico y Enrutamiento VLESS
+# ==========================================================
+
 :8080 {
-    # Enrutar directamente a Xray cualquier petición que use la ruta secreta del túnel
+    # ------------------------------------------------------
+    # 1. TÚNEL PRINCIPAL (Xray-core)
+    # Enruta directamente a Xray cualquier petición legítima 
+    # que coincida estrictamente con la ruta secreta.
+    # ------------------------------------------------------
     handle /CARC3LT {
         reverse_proxy 127.0.0.1:10000
     }
 
-    # Defensa Estática (Agujero Negro): Responde nativamente sin consultar a Claro
-    # El escáner DPI recibe un código 200 OK y asume que es un nodo válido.
+    # ------------------------------------------------------
+    # 2. DEFENSA ACTIVA Y CAMUFLAJE (Honeypot API)
+    # Cualquier intento de acceso fuera de la ruta secreta
+    # recibe esta respuesta falsa de sistema.
+    # Engaña a bots y a auditores humanos de la operadora.
+    # ------------------------------------------------------
     handle {
-        respond "OK" 200
+        header Content-Type application/json
+        header Access-Control-Allow-Origin *
+        
+        respond `{
+  "system_status": "operational",
+  "service": "gcp-api-gateway",
+  "environment": "production",
+  "version": "v2.1.4",
+  "active_nodes": 4,
+  "telemetry_routing": "enabled",
+  "auth_required": true,
+  "region": "us-central1",
+  "timestamp": "auto-sync"
+}` 200
     }
 }

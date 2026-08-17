@@ -22,4 +22,4 @@ COPY Caddyfile /etc/caddy/Caddyfile
 EXPOSE 8080
 
 # Comando de ejecución dual para Caddy y Xray
-CMD caddy start --config /etc/caddy/Caddyfile && xray -c /etc/xray/config.json
+CMD caddy start --config /etc/caddy/Caddyfile && xray run -c /etc/xray/config.json
